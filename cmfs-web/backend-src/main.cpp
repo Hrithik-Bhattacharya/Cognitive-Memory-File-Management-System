@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include<algorithm>
 
 // Include the headers we created in Phase 1 & 2
 // Ensure these files are in the same folder
@@ -38,7 +39,15 @@ private:
     // Simulating B+ Tree Index (Mapping Path -> Block Index)
     // In a full implementation, this would be your full B+ Tree Class
     std::map<std::string, long long> index_map; 
-    
+    //reverse index keywords to files
+    std::map<std::string, std::vector<std::string>> keyword_index;
+    //forward index files to keywords
+    std::map<std::string, std::vector<std::string>> file_keywords;
+    //system keywords
+    std::vector<std::string> system_keywords = {"important", "draft", "source", "config", "data"};
+
+    const int K_MAX_KEYS = 5;
+
     long long next_free_block = 0;
 
 public:
@@ -150,27 +159,99 @@ public:
     }
     // Update this inside your CognitiveDFS class in main.cpp
     void deleteFile(const std::string& filename) {
-        // 1. Verify existence in our index map
+    // 1. Verify existence in our index map (Keep your original check)
+    if (index_map.find(filename) == index_map.end()) {
+        std::cout << buildJSONResponse("error", "File not found in index") << std::endl;
+        return;
+    }
+
+    // 2. NEW: CLEANUP KEYWORDS (Reverse Index Cleanup)
+    // Use .count() to check if the file has any tags before trying to clean up
+    if (file_keywords.count(filename)) {
+        for (const std::string& key : file_keywords[filename]) {
+            // Find the list of files that share this keyword
+            if (keyword_index.count(key)) {
+                std::vector<std::string>& file_list = keyword_index[key];
+                
+                // Remove this specific filename from that keyword's vector
+                // We use std::remove from <algorithm> here
+                file_list.erase(
+                    std::remove(file_list.begin(), file_list.end(), filename), 
+                    file_list.end()
+                );
+
+                // If that was the only file with that keyword, clean up the map
+                if (file_list.empty()) {
+                    keyword_index.erase(key);
+                }
+            }
+        }
+        // Remove the file from the Forward Index (filename -> keywords mapping)
+        file_keywords.erase(filename);
+    }
+
+    // 3. Remove from Filename Trie 
+    bool trieRemoved = trie->remove(filename);
+
+    // 4. Remove from Metadata and Memory Cache
+    metadata->removeMetadata(filename);
+    
+    // 5. Remove from the Index Map (The Block mapping)
+    index_map.erase(filename);
+
+    // 6. Success response
+    std::cout << buildJSONResponse("success", "File '" + filename + "' and associated tags deleted") << std::endl;
+}
+
+    void tagFile(const std::string& filename, const std::string& keyword) {
+        // 1. Check if file exists
         if (index_map.find(filename) == index_map.end()) {
-            std::cout << buildJSONResponse("error", "File not found in index") << std::endl;
+            std::cout << buildJSONResponse("error", "Cannot tag: File does not exist") << std::endl;
             return;
         }
 
-        // 2. Remove from the Filename Trie (The code we just added above)
-        bool trieRemoved = trie->remove(filename);
-
-        // 3. Remove from Metadata and Memory Cache
-        metadata->removeMetadata(filename);
-        
-        // 4. Remove from the Index Map (the Block mapping)
-        index_map.erase(filename);
-
-        // 5. Success response
-        if (trieRemoved || !trieRemoved) { 
-            // We check trieRemoved but proceed regardless as the index_map is our source of truth
-            std::cout << buildJSONResponse("success", "File '" + filename + "' deleted successfully") << std::endl;
+        // 2. Enforce k limit
+        if (file_keywords[filename].size() >= K_MAX_KEYS) {
+            std::cout << buildJSONResponse("error", "Limit reached: Maximum " + std::to_string(K_MAX_KEYS) + " keys per file") << std::endl;
+            return;
         }
+
+        // 3. Add to Forward and Reverse Index
+        file_keywords[filename].push_back(keyword);
+        keyword_index[keyword].push_back(filename);
+
+        std::cout << buildJSONResponse("success", "Keyword '" + keyword + "' associated with " + filename) << std::endl;
     }
+
+    // Command: SEARCH_KEY <keyword>
+    void searchByKeyword(const std::string& keyword) {
+        if (keyword_index.find(keyword) == keyword_index.end() || keyword_index[keyword].empty()) {
+            std::cout << buildJSONResponse("success", "No files found for this key", "\"files\": []") << std::endl;
+            return;
+        }
+
+        std::string files_json = "[";
+        auto& list = keyword_index[keyword];
+        for (size_t i = 0; i < list.size(); ++i) {
+            files_json += "\"" + list[i] + "\"";
+            if (i < list.size() - 1) files_json += ",";
+        }
+        files_json += "]";
+
+        std::cout << buildJSONResponse("success", "Search complete", "\"files\": " + files_json) << std::endl;
+    }
+
+    // List the system pre-defined keywords for the UI
+    void getSystemKeywords() {
+        std::string keys = "[";
+        for (size_t i = 0; i < system_keywords.size(); ++i) {
+            keys += "\"" + system_keywords[i] + "\"";
+            if (i < system_keywords.size() - 1) keys += ",";
+        }
+        keys += "]";
+        std::cout << buildJSONResponse("success", "System keywords fetched", "\"keywords\": " + keys) << std::endl;
+    }
+
 };
 
 // --- Main Loop ---
@@ -213,19 +294,36 @@ int main() {
             fs.listFiles("");
         }
         else if (line.find("\"action\":\"DELETE\"") != std::string::npos) {
-            size_t f_start = line.find("\"file\":\"");
-            if (f_start != std::string::npos) {
-                f_start += 8;
-                size_t f_end = line.find("\"", f_start);
-                std::string filename = line.substr(f_start, f_end - f_start);
+    size_t f_start = line.find("\"file\":\"");
+    if (f_start != std::string::npos) {
+        f_start += 8;
+        size_t f_end = line.find("\"", f_start);
+        std::string filename = line.substr(f_start, f_end - f_start);
 
-                fs.deleteFile(filename);
-                
-                // Crucial: After deleting, we tell the frontend to refresh the list
-                // We can do this by calling listFiles immediately
-                fs.listFiles(""); 
-            }
-        }
+        fs.deleteFile(filename); 
+        // DELETE THE LINE BELOW IF IT EXISTS:
+        // fs.listFiles(""); 
+    }
+}
+        else if (line.find("\"action\":\"TAG\"") != std::string::npos) {
+    // Extract file and key
+    size_t f_start = line.find("\"file\":\"") + 8;
+    size_t f_end = line.find("\"", f_start);
+    std::string filename = line.substr(f_start, f_end - f_start);
+
+    size_t k_start = line.find("\"key\":\"") + 7;
+    size_t k_end = line.find("\"", k_start);
+    std::string keyword = line.substr(k_start, k_end - k_start);
+
+    fs.tagFile(filename, keyword);
+}
+else if (line.find("\"action\":\"SEARCH_KEY\"") != std::string::npos) {
+    size_t k_start = line.find("\"key\":\"") + 7;
+    size_t k_end = line.find("\"", k_start);
+    std::string keyword = line.substr(k_start, k_end - k_start);
+
+    fs.searchByKeyword(keyword);
+}
         else {
             // This tells us exactly what the C++ received so we can fix it
             std::cout << "{\"status\":\"error\",\"message\":\"Unknown command received: " << line << "\"}" << std::endl;
