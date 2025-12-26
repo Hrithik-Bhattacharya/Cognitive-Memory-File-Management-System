@@ -41,8 +41,20 @@ wss.on('connection', (ws) => {
 });
 
 cmfs.stdout.on('data', (data) => {
-    console.log("C++ >>", data.toString());
-    wss.clients.forEach(c => c.readyState === WebSocket.OPEN && c.send(data.toString()));
+    // Split by newline in case C++ sends multiple JSON objects at once
+    const lines = data.toString().split('\n');
+    
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed) {
+            console.log("C++ >>", trimmed);
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(trimmed);
+                }
+            });
+        }
+    });
 });
 
 server.listen(3001, () => {
