@@ -252,6 +252,30 @@ public:
         std::cout << buildJSONResponse("success", "System keywords fetched", "\"keywords\": " + keys) << std::endl;
     }
 
+    void suggestKeywords(const std::string& prefix) {
+        std::string suggestions_json = "[";
+        std::vector<std::string> matches;
+
+        // Compatibility fix: use standard iterator instead of structured bindings [key, val]
+        for (auto it = keyword_index.begin(); it != keyword_index.end(); ++it) {
+            const std::string& current_keyword = it->first; 
+            
+            // Safety check: ensure prefix isn't longer than the keyword itself
+            if (prefix.size() <= current_keyword.size()) {
+                if (current_keyword.substr(0, prefix.size()) == prefix) {
+                    matches.push_back(current_keyword);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < matches.size(); ++i) {
+            suggestions_json += "\"" + matches[i] + "\"";
+            if (i < matches.size() - 1) suggestions_json += ",";
+        }
+        suggestions_json += "]";
+
+        std::cout << buildJSONResponse("success", "Suggestions fetched", "\"suggestions\": " + suggestions_json) << std::endl;
+    }
 };
 
 // --- Main Loop ---
@@ -323,6 +347,21 @@ else if (line.find("\"action\":\"SEARCH_KEY\"") != std::string::npos) {
     std::string keyword = line.substr(k_start, k_end - k_start);
 
     fs.searchByKeyword(keyword);
+}
+
+// ... inside main loop ...
+
+else if (line.find("SUGGEST_KEYS") != std::string::npos) {
+    // Find "prefix":" and jump past it (+10 characters)
+    size_t k_start = line.find("\"prefix\":\"");
+    if (k_start != std::string::npos) {
+        k_start += 10;
+        size_t k_end = line.find("\"", k_start);
+        if (k_end != std::string::npos) {
+            std::string prefix = line.substr(k_start, k_end - k_start);
+            fs.suggestKeywords(prefix);
+        }
+    }
 }
         else {
             // This tells us exactly what the C++ received so we can fix it
