@@ -1,5 +1,3 @@
-This README is designed to give your repository a professional, high-level "System Architecture" feel. It highlights your technical accomplishments (like the real disk I/O and data structures) while clearly defining the scope for future development.
-
 ---
 
 # CMFS: Cognitive Memory File Management System
