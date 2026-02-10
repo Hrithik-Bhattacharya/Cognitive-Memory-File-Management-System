@@ -1,5 +1,3 @@
----
-
 # CMFS: Cognitive Memory File Management System
 
 **CMFS** is a low-level file management engine designed to bridge the gap between physical hardware storage and human cognitive patterns. Instead of forcing users to remember complex directory paths, CMFS utilizes a **Semantic Tagging & Ranking Engine** to retrieve files based on keywords and relevance.
@@ -71,13 +69,15 @@ git clone https://github.com/Hrithik-Bhattacharya/Cognitive-Memory-File-Manageme
 
 
 2. **Compile the Backend:**
-Navigate to `/backend` and compile the C++ source.
+Navigate to the backend directory and compile the C++ source.
 ```bash
 g++ main.cpp -o cmfs.exe
 
 ```
 
-4. **Run the Bridge:**
+
+3. **Run the Bridge:**
+Install dependencies and start the Node.js server.
 ```bash
 npm install
 node server.js
@@ -86,6 +86,7 @@ node server.js
 
 
 4. **Launch the UI:**
+Navigate to the client directory to start the React dashboard.
 ```bash
 cd client && npm install && npm start
 
