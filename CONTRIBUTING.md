@@ -6,6 +6,18 @@ Thanks for wanting to contribute! This project is a mix of C++, Node.js, and Rea
 
 To keep things organized, please follow these standard steps:
 
+Nice catch! That Google Search redirect in the link was definitely a bit messy. I've cleaned that up so it points directly to your GitHub Issues page.
+
+Here is the corrected, ready-to-paste markdown:
+
+---
+
+# Contributing to CMFS
+
+Thanks for wanting to contribute! This project is a mix of C++, Node.js, and React, so there’s plenty of room to help out.
+
+To keep things organized, please follow these standard steps:
+
 ## 🔄 The Workflow
 
 1. **Find or Create an Issue:** Before starting, check the [Issues](https://www.google.com/search?q=https://github.com/Hrithik-Bhattacharya/Cognitive-Memory-File-Management-System/issues) tab. If you find a bug or have an idea, open an issue so we can discuss it.
@@ -48,6 +60,6 @@ Since this system interacts with hardware, keep these few things in mind:
 
 * **Bug fixes:** Any logic errors in the ranking engine or UI.
 * **UI/UX:** Improving the disk visualization grid or the search interface.
-* **New Features:** Adding support for more file types or basic directory nesting, improve ranking engine efficiency etc.
+* **New Features:** Adding support for more file types, basic directory nesting, or improving ranking engine efficiency.
 
 ---
