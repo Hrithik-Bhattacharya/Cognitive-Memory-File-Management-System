@@ -1,6 +1,6 @@
 # CMFS: Cognitive Memory File Management System
 
-**CMFS** is a low-level file management engine designed to bridge the gap between physical hardware storage and human cognitive patterns. Instead of forcing users to remember complex directory paths, CMFS utilizes a **Semantic Tagging & Ranking Engine** to retrieve files based on keywords and relevance.
+**CMFS** is a system level file management engine designed to bridge the gap between physical hardware storage and human cognitive patterns. Instead of forcing users to remember complex directory paths, CMFS utilizes a **Semantic Tagging & Ranking Engine** to retrieve files based on keywords and relevance.
 
 This project was built as a demonstration of high-performance data structures interacting with real-world Windows hardware volumes.
 
@@ -8,18 +8,18 @@ This project was built as a demonstration of high-performance data structures in
 
 ## 🚀 Project Philosophy
 
-Human memory is associative, not hierarchical. We rarely remember that a file is in `C:/Users/Docs/Work/2026/Project/draft.txt`, but we remember it is a **#Draft** related to **#Work**. CMFS prioritizes these associations, making retrieval instantaneous via an Inverted Indexing architecture.
+Human memory is associative, not hierarchical. We rarely remember that a file is in `C:/Users/Docs/Work/2026/Project/marks.txt`, but we remember it is a **#Result** related to **#Grade**. CMFS prioritizes these associations, making retrieval instantaneous via an Inverted Indexing architecture.
 
 ---
 
 ## 🛠️ Current Feature Set (MVP)
 
 * **Physical Volume Interface:** Bypasses standard OS file-tree limitations to interact with local storage/logical volumes via Win32 API.
-* **Full CRUD Operations:** Support for Creating, Reading, Updating, and Deleting files directly within the managed environment.
-* **Semantic Tagging:** Assign up to 5 custom keywords per file to build a searchable metadata layer.
+* **Full CRUD Operations:** Support for Creating, Reading, Updating, and Deleting files directly within the managed environment (dedicated UI section for direct interaction with hard disk).
+* **Semantic Tagging:** Assign up to 5 custom keywords per file to build a searchable metadata layer as well as avoid redundancy and perform efficiently under space constraints. 
 * **Inverted Index Search:** High-speed,  search complexity for `.txt` files based on user-defined tags.
-* **Real-time System Logs:** A live telemetry stream in the UI showing backend C++ actions (e.g., `READ_PHYSICAL`, `WRITE_PHYSICAL`, sector offsets).
-* **Keyword Ranking Engine:** A priority-based system that associates keywords with files for faster semantic access.
+* **Real-time System Logs:** A live telemetry stream in the UI showing backend C++ actions showcasing more cognitive behaviour (e.g., `READ_PHYSICAL`, `WRITE_PHYSICAL`, sector offsets).
+* **Keyword Ranking Engine:** A priority-based system that associates keywords with files for faster semantic access in O(1) average time.
 
 ---
 
